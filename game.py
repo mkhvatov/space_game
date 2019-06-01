@@ -4,8 +4,11 @@ import time
 import random
 import os
 
+from curses_tools import draw_frame, read_controls
 
-ANIMATION_FOLDER = './animation'
+
+ROCKET = './animation/rocket'
+GARBAGE = './animation/garbage'
 
 # constants for blink function:
 MIN_BLINK_TIME = 1
@@ -20,27 +23,8 @@ COLUMN_INDENT = 1
 START_ROW = 0
 START_COLUMN = 0
 
-# constants for draw_frame function:
-START_ROW_FRAME = 0
-START_COLUMN_FRAME = 0
-ROW_INDENT_1 = 1
-COLUMN_INDENT_1 = 1
-
 # constants for animate_spaceship function:
 BORDER = 1
-
-# constants for read_controls function:
-START_DIRECTION = 0
-NO_INPUT = -1
-UP_STEP = -5
-DOWN_STEP = 5
-LEFT_STEP = -5
-RIGHT_STEP = 5
-SPACE_KEY_CODE = 32
-LEFT_KEY_CODE = 260
-RIGHT_KEY_CODE = 261
-UP_KEY_CODE = 259
-DOWN_KEY_CODE = 258
 
 # constants for main function:
 MIDDLE_DIVISOR = 2
@@ -59,6 +43,15 @@ def read_file(file_path):
     with open(file_path, "r") as file:
         file_content = file.read()
     return file_content
+
+
+def get_frame_size(text):
+    """Calculate size of multiline text fragment. Returns pair (rows number, colums number)"""
+
+    lines = text.splitlines()
+    rows = len(lines)
+    columns = max([len(line) for line in lines])
+    return rows, columns
 
 
 async def blink(canvas, row, column, symbol='*'):
@@ -111,38 +104,6 @@ async def fire(canvas, start_row, start_column, rows_speed, columns_speed):
         column += columns_speed
 
 
-def draw_frame(canvas, start_row, start_column, text, negative=False):
-    """Draw multiline text fragment on canvas. Erase text instead of drawing if negative=True is specified."""
-
-    rows_number, columns_number = canvas.getmaxyx()
-
-    for row, line in enumerate(text.splitlines(), round(start_row)):
-        if row < START_ROW_FRAME:
-            continue
-
-        if row >= rows_number:
-            break
-
-        for column, symbol in enumerate(line, round(start_column)):
-            if column < START_COLUMN_FRAME:
-                continue
-
-            if column >= columns_number:
-                break
-
-            if symbol == ' ':
-                continue
-
-            # Check that current position it is not in a lower right corner of the window
-            # Curses will raise exception in that case. Don`t ask why…
-            # https://docs.python.org/3/library/curses.html#curses.window.addch
-            if row == rows_number - ROW_INDENT_1 and column == columns_number - COLUMN_INDENT_1:
-                continue
-
-            symbol = symbol if not negative else ' '
-            canvas.addch(row, column, symbol)
-
-
 async def animate_spaceship(canvas, start_row, start_column, animation_frame_1, animation_frame_2):
 
     row, column = start_row, start_column
@@ -177,53 +138,30 @@ async def animate_spaceship(canvas, start_row, start_column, animation_frame_1, 
         draw_frame(canvas, row, column, animation_frame_2, negative=True)
 
 
-def read_controls(canvas):
-    """Read keys pressed and returns tuple witl controls state."""
+async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
+    """Animate garbage, flying from top to bottom. Сolumn position will stay same, as specified on start."""
+    rows_number, columns_number = canvas.getmaxyx()
 
-    rows_direction = columns_direction = START_DIRECTION
-    space_pressed = False
+    column = max(column, 0)
+    column = min(column, columns_number - 1)
 
-    while True:
+    row = 0
 
-        pressed_key_code = canvas.getch()
-
-        if pressed_key_code == NO_INPUT:
-            # https://docs.python.org/3/library/curses.html#curses.window.getch
-            break
-
-        if pressed_key_code == UP_KEY_CODE:
-            rows_direction = UP_STEP
-
-        if pressed_key_code == DOWN_KEY_CODE:
-            rows_direction = DOWN_STEP
-
-        if pressed_key_code == RIGHT_KEY_CODE:
-            columns_direction = RIGHT_STEP
-
-        if pressed_key_code == LEFT_KEY_CODE:
-            columns_direction = LEFT_STEP
-
-        if pressed_key_code == SPACE_KEY_CODE:
-            space_pressed = True
-
-    return rows_direction, columns_direction, space_pressed
-
-
-def get_frame_size(text):
-    """Calculate size of multiline text fragment. Returns pair (rows number, colums number)"""
-
-    lines = text.splitlines()
-    rows = len(lines)
-    columns = max([len(line) for line in lines])
-    return rows, columns
+    while row < rows_number:
+        draw_frame(canvas, row, column, garbage_frame)
+        await asyncio.sleep(0)
+        draw_frame(canvas, row, column, garbage_frame, negative=True)
+        row += speed
 
 
 def main(canvas):
     canvas.nodelay(True)
 
-    rockets = [read_file(os.path.join(ANIMATION_FOLDER, file_name)) for file_name in os.listdir(ANIMATION_FOLDER)]
+    rockets = [read_file(os.path.join(ROCKET, file_name)) for file_name in os.listdir(ROCKET)]
     rocket_1 = rockets[0]
     rocket_2 = rockets[1]
+
+    garbage = [read_file(os.path.join(GARBAGE, file_name)) for file_name in os.listdir(GARBAGE)]
 
     canvas.border()
     curses.curs_set(False)
@@ -240,7 +178,9 @@ def main(canvas):
 
     spaceship = [animate_spaceship(canvas, start_row, start_column, rocket_1, rocket_2)]
 
-    coroutines = gun_fire + stars + spaceship
+    garbage_coroutine = [fly_garbage(canvas, 10, garbage[0])]
+
+    coroutines = gun_fire + stars + spaceship + garbage_coroutine
 
     while len(coroutines) > 0:
         try:
