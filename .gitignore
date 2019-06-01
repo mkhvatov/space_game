@@ -1,0 +1,7 @@
+/data/*
+/log/*
+/venv/*
+/__pycache__/*
+/.idea/*
+*.csv
+*.rdb
