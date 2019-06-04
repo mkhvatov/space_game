@@ -154,6 +154,30 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
         row += speed
 
 
+async def fill_orbit_with_garbage(canvas, garbage, speed=0.5):
+    garbage_count = len(garbage)
+    rows_number, columns_number = canvas.getmaxyx()
+
+    while True:
+        column = random.randint(1, columns_number)
+        garbage_number = random.randint(0, garbage_count - 1)
+        garbage_frame = garbage[garbage_number]
+
+        column = max(column, 0)
+        column = min(column, columns_number - 1)
+
+        row = 0
+
+        for i in range(random.randint(1, 80)):
+            await asyncio.sleep(0)
+
+        while row < rows_number:
+            draw_frame(canvas, row, column, garbage_frame)
+            await asyncio.sleep(0)
+            draw_frame(canvas, row, column, garbage_frame, negative=True)
+            row += speed
+
+
 def main(canvas):
     canvas.nodelay(True)
 
@@ -178,7 +202,8 @@ def main(canvas):
 
     spaceship = [animate_spaceship(canvas, start_row, start_column, rocket_1, rocket_2)]
 
-    garbage_coroutine = [fly_garbage(canvas, 10, garbage[0])]
+    # garbage_coroutine = [fly_garbage(canvas, 10, garbage[0])]
+    garbage_coroutine = [fill_orbit_with_garbage(canvas, garbage) for i in range(20)]
 
     coroutines = gun_fire + stars + spaceship + garbage_coroutine
 
