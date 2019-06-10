@@ -10,6 +10,9 @@ from curses_tools import draw_frame, read_controls
 ROCKET = './animation/rocket'
 GARBAGE = './animation/garbage'
 
+# list for all coroutines:
+COROUTINES = []
+
 # constants for blink function:
 MIN_BLINK_TIME = 1
 BLINK_TIME_1 = 20
@@ -202,19 +205,18 @@ def main(canvas):
 
     spaceship = [animate_spaceship(canvas, start_row, start_column, rocket_1, rocket_2)]
 
-    # garbage_coroutine = [fly_garbage(canvas, 10, garbage[0])]
     garbage_coroutine = [fill_orbit_with_garbage(canvas, garbage) for i in range(20)]
 
-    coroutines = gun_fire + stars + spaceship + garbage_coroutine
+    COROUTINES = gun_fire + stars + spaceship + garbage_coroutine
 
-    while len(coroutines) > 0:
+    while len(COROUTINES) > 0:
         try:
-            for coroutine in coroutines:
+            for coroutine in COROUTINES:
                 coroutine.send(None)
             canvas.refresh()
             time.sleep(LOOP_PAUSE)
         except StopIteration:
-            coroutines.remove(coroutine)
+            COROUTINES.remove(coroutine)
 
 
 if __name__ == '__main__':
