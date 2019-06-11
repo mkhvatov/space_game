@@ -13,8 +13,9 @@ GARBAGE = './animation/garbage'
 # list for all coroutines:
 COROUTINES = []
 
+MIN_TIME = 1
+
 # constants for blink function:
-MIN_BLINK_TIME = 1
 BLINK_TIME_1 = 20
 BLINK_TIME_2 = 3
 BLINK_TIME_3 = 5
@@ -28,6 +29,9 @@ START_COLUMN = 0
 
 # constants for animate_spaceship function:
 BORDER = 1
+
+# constants for fill_orbit_with_garbage function:
+GARBAGE_FALL_PAUSE = 80
 
 # constants for main function:
 MIDDLE_DIVISOR = 2
@@ -57,23 +61,24 @@ def get_frame_size(text):
     return rows, columns
 
 
+async def sleep(tics=1):
+    for i in range(random.randint(MIN_TIME, tics)):
+        await asyncio.sleep(0)
+
+
 async def blink(canvas, row, column, symbol='*'):
     while True:
         canvas.addstr(row, column, symbol, curses.A_DIM)
-        for i in range(random.randint(MIN_BLINK_TIME, BLINK_TIME_1)):
-            await asyncio.sleep(0)
+        await sleep(BLINK_TIME_1)
 
         canvas.addstr(row, column, symbol)
-        for i in range(random.randint(MIN_BLINK_TIME, BLINK_TIME_2)):
-            await asyncio.sleep(0)
+        await sleep(BLINK_TIME_2)
 
         canvas.addstr(row, column, symbol, curses.A_BOLD)
-        for i in range(random.randint(MIN_BLINK_TIME, BLINK_TIME_3)):
-            await asyncio.sleep(0)
+        await sleep(BLINK_TIME_3)
 
         canvas.addstr(row, column, symbol)
-        for i in range(random.randint(MIN_BLINK_TIME, BLINK_TIME_4)):
-            await asyncio.sleep(0)
+        await sleep(BLINK_TIME_4)
 
 
 async def fire(canvas, start_row, start_column, rows_speed, columns_speed):
@@ -171,8 +176,7 @@ async def fill_orbit_with_garbage(canvas, garbage, speed=0.5):
 
         row = 0
 
-        for i in range(random.randint(1, 80)):
-            await asyncio.sleep(0)
+        await sleep(GARBAGE_FALL_PAUSE)
 
         while row < rows_number:
             draw_frame(canvas, row, column, garbage_frame)
