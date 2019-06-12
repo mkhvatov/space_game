@@ -5,6 +5,7 @@ import random
 import os
 
 from curses_tools import draw_frame, read_controls
+from physics import update_speed
 
 
 ROCKET = './animation/rocket'
@@ -115,13 +116,16 @@ async def fire(canvas, start_row, start_column, rows_speed, columns_speed):
 async def animate_spaceship(canvas, start_row, start_column, animation_frame_1, animation_frame_2):
 
     row, column = start_row, start_column
+    row_speed = column_speed = 0
+
     rows_number, columns_number = canvas.getmaxyx()
     frame_rows, frame_columns = get_frame_size(animation_frame_1)
 
     while True:
         rows_direction, columns_direction, space_pressed = read_controls(canvas)
+        row_speed, column_speed = update_speed(row_speed, column_speed, rows_direction, columns_direction)
 
-        row += rows_direction
+        row += row_speed
         upper_border = BORDER
         if row < upper_border:
             row = upper_border
@@ -129,7 +133,7 @@ async def animate_spaceship(canvas, start_row, start_column, animation_frame_1, 
         if row > bottom_border:
             row = bottom_border
 
-        column += columns_direction
+        column += column_speed
         left_border = BORDER
         if column < left_border:
             column = left_border
