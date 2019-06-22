@@ -28,7 +28,7 @@ COLUMN_INDENT = 1
 START_ROW = 0
 START_COLUMN = 0
 
-# constants for animate_spaceship function:
+# constants for drive_spaceship function:
 BORDER = 1
 
 # constants for fill_orbit_with_garbage function:
@@ -113,7 +113,18 @@ async def fire(canvas, start_row, start_column, rows_speed, columns_speed):
         column += columns_speed
 
 
-async def animate_spaceship(canvas, start_row, start_column, animation_frame_1, animation_frame_2):
+async def animate_spaceship(animation_frame):
+    global spaceship_frame
+    spaceship_frame = animation_frame
+
+
+async def run_spaceship(canvas, row, column):
+    draw_frame(canvas, row, column, spaceship_frame)
+    await asyncio.sleep(0)
+    draw_frame(canvas, row, column, spaceship_frame, negative=True)
+
+
+async def drive_spaceship(canvas, start_row, start_column, animation_frame_1, animation_frame_2):
 
     row, column = start_row, start_column
     row_speed = column_speed = 0
@@ -141,13 +152,11 @@ async def animate_spaceship(canvas, start_row, start_column, animation_frame_1, 
         if column > right_border:
             column = right_border
 
-        draw_frame(canvas, row, column, animation_frame_1)
-        await asyncio.sleep(0)
-        draw_frame(canvas, row, column, animation_frame_1, negative=True)
+        await animate_spaceship(animation_frame_1)
+        await run_spaceship(canvas, row, column)
 
-        draw_frame(canvas, row, column, animation_frame_2)
-        await asyncio.sleep(0)
-        draw_frame(canvas, row, column, animation_frame_2, negative=True)
+        await animate_spaceship(animation_frame_2)
+        await run_spaceship(canvas, row, column)
 
 
 async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
@@ -211,7 +220,7 @@ def main(canvas):
                      rows_speed=ROWS_SPEED, columns_speed=COLUMNS_SPEED)]
     stars = [blink(canvas, row, column, symbol=random.choice(STAR_SYMBOLS)) for row, column in coordinates]
 
-    spaceship = [animate_spaceship(canvas, start_row, start_column, rocket_1, rocket_2)]
+    spaceship = [drive_spaceship(canvas, start_row, start_column, rocket_1, rocket_2)]
 
     garbage_coroutine = [fill_orbit_with_garbage(canvas, garbage) for i in range(20)]
 
