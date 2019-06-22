@@ -124,6 +124,16 @@ async def run_spaceship(canvas, row, column):
     draw_frame(canvas, row, column, spaceship_frame, negative=True)
 
 
+async def save_fire_coordinates(row, column):
+    global fire_coordinates
+    fire_coordinates = (row, column)
+
+
+async def delete_fire_coordinates():
+    global fire_coordinates
+    fire_coordinates = False
+
+
 async def drive_spaceship(canvas, start_row, start_column, animation_frame_1, animation_frame_2):
 
     row, column = start_row, start_column
@@ -152,27 +162,15 @@ async def drive_spaceship(canvas, start_row, start_column, animation_frame_1, an
         if column > right_border:
             column = right_border
 
+        if space_pressed:
+            spaceship_head_column = column + (frame_columns / 2)
+            await save_fire_coordinates(row, spaceship_head_column)
+
         await animate_spaceship(animation_frame_1)
         await run_spaceship(canvas, row, column)
 
         await animate_spaceship(animation_frame_2)
         await run_spaceship(canvas, row, column)
-
-
-async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
-    """Animate garbage, flying from top to bottom. Сolumn position will stay same, as specified on start."""
-    rows_number, columns_number = canvas.getmaxyx()
-
-    column = max(column, 0)
-    column = min(column, columns_number - 1)
-
-    row = 0
-
-    while row < rows_number:
-        draw_frame(canvas, row, column, garbage_frame)
-        await asyncio.sleep(0)
-        draw_frame(canvas, row, column, garbage_frame, negative=True)
-        row += speed
 
 
 async def fill_orbit_with_garbage(canvas, garbage, speed=0.5):
@@ -216,17 +214,23 @@ def main(canvas):
     coordinates = [(random.randint(ROW_INDENT_2, max_row-ROW_INDENT_2),
                     random.randint(COLUMN_INDENT_2, max_column-COLUMN_INDENT_2)) for i in range(STARS_NUMBER)]
 
-    gun_fire = [fire(canvas, start_row=max_row-ROW_INDENT_2, start_column=start_column,
-                     rows_speed=ROWS_SPEED, columns_speed=COLUMNS_SPEED)]
     stars = [blink(canvas, row, column, symbol=random.choice(STAR_SYMBOLS)) for row, column in coordinates]
 
     spaceship = [drive_spaceship(canvas, start_row, start_column, rocket_1, rocket_2)]
 
     garbage_coroutine = [fill_orbit_with_garbage(canvas, garbage) for i in range(20)]
 
-    COROUTINES = gun_fire + stars + spaceship + garbage_coroutine
+    COROUTINES = stars + spaceship + garbage_coroutine
+
+    global fire_coordinates
+    fire_coordinates = False
 
     while len(COROUTINES) > 0:
+        if fire_coordinates:
+            row, column = fire_coordinates
+            COROUTINES.append(fire(canvas, start_row=row, start_column=column,
+                                   rows_speed=ROWS_SPEED, columns_speed=COLUMNS_SPEED))
+            COROUTINES.append(delete_fire_coordinates())
         try:
             for coroutine in COROUTINES:
                 coroutine.send(None)
