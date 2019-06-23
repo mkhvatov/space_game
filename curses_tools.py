@@ -82,3 +82,12 @@ def read_controls(canvas):
             space_pressed = True
 
     return rows_direction, columns_direction, space_pressed
+
+
+def get_frame_size(text):
+    """Calculate size of multiline text fragment. Returns pair (rows number, colums number)"""
+
+    lines = text.splitlines()
+    rows = len(lines)
+    columns = max([len(line) for line in lines])
+    return rows, columns

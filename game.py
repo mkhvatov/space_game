@@ -3,9 +3,11 @@ import curses
 import time
 import random
 import os
+import uuid
 
-from curses_tools import draw_frame, read_controls
+from curses_tools import draw_frame, read_controls, get_frame_size
 from physics import update_speed
+from obstacles import Obstacle
 
 
 ROCKET = './animation/rocket'
@@ -51,15 +53,6 @@ def read_file(file_path):
     with open(file_path, "r") as file:
         file_content = file.read()
     return file_content
-
-
-def get_frame_size(text):
-    """Calculate size of multiline text fragment. Returns pair (rows number, colums number)"""
-
-    lines = text.splitlines()
-    rows = len(lines)
-    columns = max([len(line) for line in lines])
-    return rows, columns
 
 
 async def sleep(tics=1):
@@ -181,6 +174,8 @@ async def fill_orbit_with_garbage(canvas, garbage, speed=0.5):
         column = random.randint(1, columns_number)
         garbage_number = random.randint(0, garbage_count - 1)
         garbage_frame = garbage[garbage_number]
+        rows_size, columns_size = get_frame_size(garbage_frame)
+        garbage_uid = uuid.uuid4()
 
         column = max(column, 0)
         column = min(column, columns_number - 1)
@@ -190,6 +185,8 @@ async def fill_orbit_with_garbage(canvas, garbage, speed=0.5):
         await sleep(GARBAGE_FALL_PAUSE)
 
         while row < rows_number:
+            obstacle = Obstacle(row, column, rows_size, columns_size, garbage_uid)
+
             draw_frame(canvas, row, column, garbage_frame)
             await asyncio.sleep(0)
             draw_frame(canvas, row, column, garbage_frame, negative=True)

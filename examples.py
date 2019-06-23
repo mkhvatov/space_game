@@ -1,19 +1,8 @@
-from physics import update_speed
+# 1) подключить ф-ю get_frame_size (curses_tools.py) к fill_orbit_with_garbage - ok
 
+# 2) в fill_orbit_with_garbage в начале второго while сохранять в глобальгную переменную obstacles объект
+# (корутина, которая сохраняет в глоб переменную)
+# Obstacle (obstacle.row, obstacle.column, obstacle.rows_size, obstacle.columns_size, obstacle.uid)
+# обновлять row и column у obstacle с уникальным uid каждую итерацию цикла
 
-# корабль стоит на месте
-row = column = 10
-row_speed = column_speed = 0
-
-# теперь рванул вверх
-row_speed, column_speed = update_speed(row_speed, column_speed, -1, 0)
-
-
-if __name__ == '__main__':
-    a = 0
-    while a < 10:
-        row_speed, column_speed = update_speed(row_speed, column_speed, -1, 0)
-        row += row_speed
-        column += column_speed
-        print(row, column)
-        a += 1
+# 3) прикрепить корутину show_obstacles
