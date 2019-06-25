@@ -1,8 +1,11 @@
-# 1) подключить ф-ю get_frame_size (curses_tools.py) к fill_orbit_with_garbage - ok
+def print_in_while(a):
+    try:
+        while a > 0:
+            print('a = {}'.format(a))
+            a -= 1
+    finally:
+        print('The end!')
 
-# 2) в fill_orbit_with_garbage в начале второго while сохранять в глобальгную переменную obstacles объект
-# (корутина, которая сохраняет в глоб переменную)
-# Obstacle (obstacle.row, obstacle.column, obstacle.rows_size, obstacle.columns_size, obstacle.uid)
-# обновлять row и column у obstacle с уникальным uid каждую итерацию цикла
 
-# 3) прикрепить корутину show_obstacles
+if __name__ == '__main__':
+    print_in_while(10)

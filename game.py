@@ -7,7 +7,7 @@ import uuid
 
 from curses_tools import draw_frame, read_controls, get_frame_size
 from physics import update_speed
-from obstacles import Obstacle
+from obstacles import Obstacle, show_obstacles
 
 
 ROCKET = './animation/rocket'
@@ -184,13 +184,18 @@ async def fill_orbit_with_garbage(canvas, garbage, speed=0.5):
 
         await sleep(GARBAGE_FALL_PAUSE)
 
-        while row < rows_number:
-            obstacle = Obstacle(row, column, rows_size, columns_size, garbage_uid)
+        try:
+            while row < rows_number:
+                [obstacles.remove(obstacle) for obstacle in obstacles if obstacle.uid == garbage_uid]
+                obstacle = Obstacle(row, column, rows_size, columns_size, garbage_uid)
+                obstacles.append(obstacle)
 
-            draw_frame(canvas, row, column, garbage_frame)
-            await asyncio.sleep(0)
-            draw_frame(canvas, row, column, garbage_frame, negative=True)
-            row += speed
+                draw_frame(canvas, row, column, garbage_frame)
+                await asyncio.sleep(0)
+                draw_frame(canvas, row, column, garbage_frame, negative=True)
+                row += speed
+        finally:
+            [obstacles.remove(obstacle) for obstacle in obstacles if obstacle.uid == garbage_uid]
 
 
 def main(canvas):
@@ -221,6 +226,14 @@ def main(canvas):
 
     global fire_coordinates
     fire_coordinates = False
+
+    global obstacles
+    obstacles = []
+    fake_obstacle = Obstacle(0, 0, 0, 0, 0)
+    obstacles.append(fake_obstacle)
+
+    obstacles_coroutine = show_obstacles(canvas, obstacles)
+    COROUTINES.append(obstacles_coroutine)
 
     while len(COROUTINES) > 0:
         if fire_coordinates:
