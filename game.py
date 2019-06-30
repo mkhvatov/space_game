@@ -101,6 +101,7 @@ async def fire(canvas, start_row, start_column, rows_speed, columns_speed):
     while START_ROW < row < max_row and START_COLUMN < column < max_column:
         for obstacle in obstacles:
             if obstacle.has_collision(row, column):
+                obstacles_in_last_collisions.append(obstacle)
                 return None
 
         canvas.addstr(round(row), round(column), symbol)
@@ -190,6 +191,15 @@ async def fill_orbit_with_garbage(canvas, garbage, speed=0.5):
 
         try:
             while row < rows_number:
+
+                obstacle_breaked = False
+                for obstacle in obstacles_in_last_collisions:
+                    if obstacle.uid == garbage_uid:
+                        obstacle_breaked = True
+                        break
+                if obstacle_breaked:
+                    break
+
                 [obstacles.remove(obstacle) for obstacle in obstacles if obstacle.uid == garbage_uid]
                 obstacle = Obstacle(row, column, rows_size, columns_size, garbage_uid)
                 obstacles.append(obstacle)
@@ -200,6 +210,9 @@ async def fill_orbit_with_garbage(canvas, garbage, speed=0.5):
                 row += speed
         finally:
             [obstacles.remove(obstacle) for obstacle in obstacles if obstacle.uid == garbage_uid]
+
+            [obstacles_in_last_collisions.remove(obstacle) for obstacle in obstacles_in_last_collisions
+             if obstacle.uid == garbage_uid]
 
 
 def main(canvas):
@@ -233,8 +246,9 @@ def main(canvas):
 
     global obstacles
     obstacles = []
-    fake_obstacle = Obstacle(0, 0, 0, 0, 0)
-    obstacles.append(fake_obstacle)
+
+    global obstacles_in_last_collisions
+    obstacles_in_last_collisions = []
 
     obstacles_coroutine = show_obstacles(canvas, obstacles)
     COROUTINES.append(obstacles_coroutine)
