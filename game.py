@@ -8,6 +8,7 @@ import uuid
 from curses_tools import draw_frame, read_controls, get_frame_size
 from physics import update_speed
 from obstacles import Obstacle, show_obstacles
+from explosion import explode
 
 
 ROCKET = './animation/rocket'
@@ -102,6 +103,9 @@ async def fire(canvas, start_row, start_column, rows_speed, columns_speed):
         for obstacle in obstacles:
             if obstacle.has_collision(row, column):
                 obstacles_in_last_collisions.append(obstacle)
+                center_row = obstacle.row + obstacle.rows_size / 2
+                center_column = obstacle.column + obstacle.columns_size / 2
+                await explode(canvas, center_row, center_column)
                 return None
 
         canvas.addstr(round(row), round(column), symbol)
