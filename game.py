@@ -13,6 +13,7 @@ from explosion import explode
 
 ROCKET = './animation/rocket'
 GARBAGE = './animation/garbage'
+GAME_OVER_FRAME = './animation/game_over.txt'
 
 # list for all coroutines:
 COROUTINES = []
@@ -115,6 +116,18 @@ async def fire(canvas, start_row, start_column, rows_speed, columns_speed):
         column += columns_speed
 
 
+async def show_gameover(canvas, frame):
+    screen_rows, screen_columns = canvas.getmaxyx()
+    frame_rows, frame_columns = get_frame_size(frame)
+
+    corner_row = screen_rows / 2 - frame_rows / 2
+    corner_column = screen_columns / 2 - frame_columns / 2
+
+    while True:
+        draw_frame(canvas, corner_row, corner_column, frame)
+        await asyncio.sleep(0)
+
+
 async def animate_spaceship(animation_frame):
     global spaceship_frame
     spaceship_frame = animation_frame
@@ -167,6 +180,13 @@ async def drive_spaceship(canvas, start_row, start_column, animation_frame_1, an
         if space_pressed:
             spaceship_head_column = column + (frame_columns / 2)
             await save_fire_coordinates(row, spaceship_head_column)
+
+        global spaceship_breaked
+
+        for obstacle in obstacles:
+            if obstacle.has_collision(row, column):
+                spaceship_breaked = True
+                return None
 
         await animate_spaceship(animation_frame_1)
         await run_spaceship(canvas, row, column)
@@ -228,6 +248,9 @@ def main(canvas):
 
     garbage = [read_file(os.path.join(GARBAGE, file_name)) for file_name in os.listdir(GARBAGE)]
 
+    global game_over_frame
+    game_over_frame = read_file(GAME_OVER_FRAME)
+
     canvas.border()
     curses.curs_set(False)
 
@@ -257,12 +280,19 @@ def main(canvas):
     obstacles_coroutine = show_obstacles(canvas, obstacles)
     COROUTINES.append(obstacles_coroutine)
 
+    global spaceship_breaked
+    spaceship_breaked = False
+
     while len(COROUTINES) > 0:
         if fire_coordinates:
             row, column = fire_coordinates
             COROUTINES.append(fire(canvas, start_row=row, start_column=column,
                                    rows_speed=ROWS_SPEED, columns_speed=COLUMNS_SPEED))
             COROUTINES.append(delete_fire_coordinates())
+
+        if spaceship_breaked:
+            COROUTINES.append(show_gameover(canvas, game_over_frame))
+
         try:
             for coroutine in COROUTINES:
                 coroutine.send(None)
