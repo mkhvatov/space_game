@@ -15,9 +15,6 @@ ROCKET = './animation/rocket'
 GARBAGE = './animation/garbage'
 GAME_OVER_FRAME = './animation/game_over.txt'
 
-# list for all coroutines:
-COROUTINES = []
-
 MIN_TIME = 1
 
 # constants for blink function:
@@ -266,7 +263,8 @@ def main(canvas):
 
     garbage_coroutine = [fill_orbit_with_garbage(canvas, garbage) for i in range(20)]
 
-    COROUTINES = stars + spaceship + garbage_coroutine
+    global coroutines
+    coroutines = stars + spaceship + garbage_coroutine
 
     global fire_coordinates
     fire_coordinates = False
@@ -278,28 +276,28 @@ def main(canvas):
     obstacles_in_last_collisions = []
 
     obstacles_coroutine = show_obstacles(canvas, obstacles)
-    COROUTINES.append(obstacles_coroutine)
+    coroutines.append(obstacles_coroutine)
 
     global spaceship_breaked
     spaceship_breaked = False
 
-    while len(COROUTINES) > 0:
+    while len(coroutines) > 0:
         if fire_coordinates:
             row, column = fire_coordinates
-            COROUTINES.append(fire(canvas, start_row=row, start_column=column,
+            coroutines.append(fire(canvas, start_row=row, start_column=column,
                                    rows_speed=ROWS_SPEED, columns_speed=COLUMNS_SPEED))
-            COROUTINES.append(delete_fire_coordinates())
+            coroutines.append(delete_fire_coordinates())
 
         if spaceship_breaked:
-            COROUTINES.append(show_gameover(canvas, game_over_frame))
+            coroutines.append(show_gameover(canvas, game_over_frame))
 
         try:
-            for coroutine in COROUTINES:
+            for coroutine in coroutines:
                 coroutine.send(None)
             canvas.refresh()
             time.sleep(LOOP_PAUSE)
         except StopIteration:
-            COROUTINES.remove(coroutine)
+            coroutines.remove(coroutine)
 
 
 if __name__ == '__main__':
