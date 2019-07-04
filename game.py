@@ -33,7 +33,7 @@ START_COLUMN = 0
 BORDER = 1
 
 # constants for fill_orbit_with_garbage function:
-GARBAGE_FALL_PAUSE = 80
+GARBAGE_FALL_PAUSE = 10
 
 # constants for main function:
 MIDDLE_DIVISOR = 2
@@ -56,6 +56,11 @@ def read_file(file_path):
 
 async def sleep(tics=1):
     for i in range(random.randint(MIN_TIME, tics)):
+        await asyncio.sleep(0)
+
+
+async def sleep_exact(tics=1):
+    for i in range(tics):
         await asyncio.sleep(0)
 
 
@@ -192,48 +197,55 @@ async def drive_spaceship(canvas, start_row, start_column, animation_frame_1, an
         await run_spaceship(canvas, row, column)
 
 
-async def fill_orbit_with_garbage(canvas, garbage, speed=0.5):
+async def fill_orbit_with_garbage(canvas, garbage, tics):
     garbage_count = len(garbage)
-    rows_number, columns_number = canvas.getmaxyx()
+    _, columns_number = canvas.getmaxyx()
 
     while True:
         column = random.randint(1, columns_number)
         garbage_number = random.randint(0, garbage_count - 1)
         garbage_frame = garbage[garbage_number]
-        rows_size, columns_size = get_frame_size(garbage_frame)
-        garbage_uid = uuid.uuid4()
 
-        column = max(column, 0)
-        column = min(column, columns_number - 1)
+        await sleep_exact(tics=tics)
+        coroutines.append(fly_garbage(canvas, column, garbage_frame))
 
-        row = 0
 
-        await sleep(GARBAGE_FALL_PAUSE)
+async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
+    """Animate garbage, flying from top to bottom. Сolumn position will stay same, as specified on start."""
+    rows_number, columns_number = canvas.getmaxyx()
 
-        try:
-            while row < rows_number:
+    column = max(column, 0)
+    column = min(column, columns_number - 1)
 
-                obstacle_breaked = False
-                for obstacle in obstacles_in_last_collisions:
-                    if obstacle.uid == garbage_uid:
-                        obstacle_breaked = True
-                        break
-                if obstacle_breaked:
+    row = 0
+
+    rows_size, columns_size = get_frame_size(garbage_frame)
+    garbage_uid = uuid.uuid4()
+
+    try:
+        while row < rows_number:
+
+            obstacle_breaked = False
+            for obstacle in obstacles_in_last_collisions:
+                if obstacle.uid == garbage_uid:
+                    obstacle_breaked = True
                     break
+            if obstacle_breaked:
+                break
 
-                [obstacles.remove(obstacle) for obstacle in obstacles if obstacle.uid == garbage_uid]
-                obstacle = Obstacle(row, column, rows_size, columns_size, garbage_uid)
-                obstacles.append(obstacle)
-
-                draw_frame(canvas, row, column, garbage_frame)
-                await asyncio.sleep(0)
-                draw_frame(canvas, row, column, garbage_frame, negative=True)
-                row += speed
-        finally:
             [obstacles.remove(obstacle) for obstacle in obstacles if obstacle.uid == garbage_uid]
+            obstacle = Obstacle(row, column, rows_size, columns_size, garbage_uid)
+            obstacles.append(obstacle)
 
-            [obstacles_in_last_collisions.remove(obstacle) for obstacle in obstacles_in_last_collisions
-             if obstacle.uid == garbage_uid]
+            draw_frame(canvas, row, column, garbage_frame)
+            await asyncio.sleep(0)
+            draw_frame(canvas, row, column, garbage_frame, negative=True)
+            row += speed
+    finally:
+        [obstacles.remove(obstacle) for obstacle in obstacles if obstacle.uid == garbage_uid]
+
+        [obstacles_in_last_collisions.remove(obstacle) for obstacle in obstacles_in_last_collisions
+         if obstacle.uid == garbage_uid]
 
 
 def main(canvas):
@@ -261,10 +273,11 @@ def main(canvas):
 
     spaceship = [drive_spaceship(canvas, start_row, start_column, rocket_1, rocket_2)]
 
-    garbage_coroutine = [fill_orbit_with_garbage(canvas, garbage) for i in range(20)]
-
     global coroutines
-    coroutines = stars + spaceship + garbage_coroutine
+    coroutines = stars + spaceship
+
+    garbage_coroutine = fill_orbit_with_garbage(canvas, garbage, tics=GARBAGE_FALL_PAUSE)
+    coroutines.append(garbage_coroutine)
 
     global fire_coordinates
     fire_coordinates = False
