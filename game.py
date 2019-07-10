@@ -9,6 +9,7 @@ from curses_tools import draw_frame, read_controls, get_frame_size
 from physics import update_speed
 from obstacles import Obstacle, show_obstacles
 from explosion import explode
+from game_scenario import get_garbage_delay_tics
 
 
 ROCKET = './animation/rocket'
@@ -197,7 +198,7 @@ async def drive_spaceship(canvas, start_row, start_column, animation_frame_1, an
         await run_spaceship(canvas, row, column)
 
 
-async def fill_orbit_with_garbage(canvas, garbage, tics):
+async def fill_orbit_with_garbage(canvas, garbage):
     garbage_count = len(garbage)
     _, columns_number = canvas.getmaxyx()
 
@@ -206,8 +207,14 @@ async def fill_orbit_with_garbage(canvas, garbage, tics):
         garbage_number = random.randint(0, garbage_count - 1)
         garbage_frame = garbage[garbage_number]
 
-        await sleep_exact(tics=tics)
-        coroutines.append(fly_garbage(canvas, column, garbage_frame))
+        # TODO:
+        global year
+        tics = get_garbage_delay_tics(year)
+        if tics is None:
+            await asyncio.sleep(0)
+        else:
+            await sleep_exact(tics=tics)
+            coroutines.append(fly_garbage(canvas, column, garbage_frame))
 
 
 async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
@@ -248,6 +255,14 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
          if obstacle.uid == garbage_uid]
 
 
+async def run_years(tics):
+    global year
+
+    while year < 2020:
+        await sleep_exact(tics=tics)
+        year += 1
+
+
 def main(canvas):
     canvas.nodelay(True)
 
@@ -276,7 +291,7 @@ def main(canvas):
     global coroutines
     coroutines = stars + spaceship
 
-    garbage_coroutine = fill_orbit_with_garbage(canvas, garbage, tics=GARBAGE_FALL_PAUSE)
+    garbage_coroutine = fill_orbit_with_garbage(canvas, garbage)
     coroutines.append(garbage_coroutine)
 
     global fire_coordinates
@@ -290,6 +305,11 @@ def main(canvas):
 
     obstacles_coroutine = show_obstacles(canvas, obstacles)
     coroutines.append(obstacles_coroutine)
+
+    global year
+    year = 1957
+    years_coroutine = run_years(tics=15)
+    coroutines.append(years_coroutine)
 
     global spaceship_breaked
     spaceship_breaked = False
