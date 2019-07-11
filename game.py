@@ -9,7 +9,7 @@ from curses_tools import draw_frame, read_controls, get_frame_size
 from physics import update_speed
 from obstacles import Obstacle, show_obstacles
 from explosion import explode
-from game_scenario import get_garbage_delay_tics
+from game_scenario import get_garbage_delay_tics, PHRASES
 
 
 ROCKET = './animation/rocket'
@@ -207,7 +207,6 @@ async def fill_orbit_with_garbage(canvas, garbage):
         garbage_number = random.randint(0, garbage_count - 1)
         garbage_frame = garbage[garbage_number]
 
-        # TODO:
         global year
         tics = get_garbage_delay_tics(year)
         if tics is None:
@@ -263,6 +262,28 @@ async def run_years(tics):
         year += 1
 
 
+async def show_years(canvas):
+    screen_rows, screen_columns = canvas.getmaxyx()
+    left_corner_row = round(screen_rows * 0.7)
+    left_corner_column = 0
+
+    window = canvas.derwin(left_corner_row, left_corner_column)
+    window_rows, window_columns = window.getmaxyx()
+    row, column = window_rows / 2, window_columns / 2
+
+    while True:
+        global year
+
+        if year in PHRASES.keys():
+            frame = PHRASES[year]
+        else:
+            frame = str(year)
+
+        draw_frame(window, row, column, frame)
+        await asyncio.sleep(0)
+        draw_frame(window, row, column, frame, negative=True)
+
+
 def main(canvas):
     canvas.nodelay(True)
 
@@ -310,6 +331,8 @@ def main(canvas):
     year = 1957
     years_coroutine = run_years(tics=15)
     coroutines.append(years_coroutine)
+
+    coroutines.append(show_years(canvas))
 
     global spaceship_breaked
     spaceship_breaked = False
