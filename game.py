@@ -275,7 +275,8 @@ async def show_years(canvas):
         global year
 
         if year in PHRASES.keys():
-            frame = PHRASES[year]
+            frame = '{} - {}'.format(year, PHRASES[year])
+            # frame = PHRASES[year]
         else:
             frame = str(year)
 
