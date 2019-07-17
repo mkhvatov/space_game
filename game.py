@@ -7,7 +7,7 @@ import uuid
 
 from curses_tools import draw_frame, read_controls, get_frame_size
 from physics import update_speed
-from obstacles import Obstacle, show_obstacles
+from obstacles import Obstacle
 from explosion import explode
 from game_scenario import get_garbage_delay_tics, PHRASES
 
@@ -35,6 +35,7 @@ BORDER = 1
 
 # constants for fill_orbit_with_garbage function:
 GARBAGE_FALL_PAUSE = 10
+GARBAGE_SPEED = 0.5
 
 # constants for main function:
 MIDDLE_DIVISOR = 2
@@ -47,6 +48,14 @@ MAX_STARS_NUMBER = 45
 STARS_NUMBER = random.randint(MIN_STARS_NUMBER, MAX_STARS_NUMBER)
 STAR_SYMBOLS = '+*.:'
 LOOP_PAUSE = 0.1
+
+# constants for years:
+START_YEAR = 1957
+FINAL_YEAR = 2020
+YEAR_TICS = 15
+
+# rate for years window:
+WINDOW_RATE = 0.7
 
 
 def read_file(file_path):
@@ -216,7 +225,7 @@ async def fill_orbit_with_garbage(canvas, garbage):
             coroutines.append(fly_garbage(canvas, column, garbage_frame))
 
 
-async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
+async def fly_garbage(canvas, column, garbage_frame, speed=GARBAGE_SPEED):
     """Animate garbage, flying from top to bottom. Сolumn position will stay same, as specified on start."""
     rows_number, columns_number = canvas.getmaxyx()
 
@@ -257,14 +266,14 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
 async def run_years(tics):
     global year
 
-    while year <= 2020:
+    while year <= FINAL_YEAR:
         await sleep_exact(tics=tics)
         year += 1
 
 
 async def show_years(canvas):
     screen_rows, screen_columns = canvas.getmaxyx()
-    left_corner_row = round(screen_rows * 0.7)
+    left_corner_row = round(screen_rows * WINDOW_RATE)
     left_corner_column = 0
 
     window = canvas.derwin(left_corner_row, left_corner_column)
@@ -273,7 +282,7 @@ async def show_years(canvas):
 
     global year
 
-    while year <= 2020:
+    while year <= FINAL_YEAR:
         if year in PHRASES.keys():
             frame = '{} - {}'.format(year, PHRASES[year])
         else:
@@ -317,8 +326,9 @@ def main(canvas):
     coroutines = stars + spaceship
 
     global year
-    year = 1957
-    years_coroutine = run_years(tics=15)
+    year = START_YEAR
+
+    years_coroutine = run_years(tics=YEAR_TICS)
     coroutines.append(years_coroutine)
 
     coroutines.append(show_years(canvas))
@@ -334,9 +344,6 @@ def main(canvas):
 
     global obstacles_in_last_collisions
     obstacles_in_last_collisions = []
-
-    obstacles_coroutine = show_obstacles(canvas, obstacles)
-    coroutines.append(obstacles_coroutine)
 
     global spaceship_breaked
     spaceship_breaked = False
