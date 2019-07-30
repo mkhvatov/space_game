@@ -151,16 +151,6 @@ async def run_spaceship(canvas, row, column):
     draw_frame(canvas, row, column, spaceship_frame, negative=True)
 
 
-async def save_fire_coordinates(row, column):
-    global fire_coordinates
-    fire_coordinates = (row, column)
-
-
-async def delete_fire_coordinates():
-    global fire_coordinates
-    fire_coordinates = None
-
-
 async def drive_spaceship(canvas, start_row, start_column, animation_frame_1, animation_frame_2):
 
     row, column = start_row, start_column
@@ -191,7 +181,8 @@ async def drive_spaceship(canvas, start_row, start_column, animation_frame_1, an
 
         if space_pressed:
             spaceship_head_column = column + (frame_columns / 2)
-            await save_fire_coordinates(row, spaceship_head_column)
+            coroutines.append(fire(canvas, start_row=row, start_column=spaceship_head_column,
+                                   rows_speed=ROWS_SPEED, columns_speed=COLUMNS_SPEED))
 
         global spaceship_breaked
 
@@ -336,9 +327,6 @@ def main(canvas):
     garbage_coroutine = fill_orbit_with_garbage(canvas, garbage)
     coroutines.append(garbage_coroutine)
 
-    global fire_coordinates
-    fire_coordinates = None
-
     global obstacles
     obstacles = []
 
@@ -349,12 +337,6 @@ def main(canvas):
     spaceship_breaked = None
 
     while coroutines:
-        if fire_coordinates:
-            row, column = fire_coordinates
-            coroutines.append(fire(canvas, start_row=row, start_column=column,
-                                   rows_speed=ROWS_SPEED, columns_speed=COLUMNS_SPEED))
-            coroutines.append(delete_fire_coordinates())
-
         if spaceship_breaked:
             coroutines.append(show_gameover(canvas, game_over_frame))
 
