@@ -348,7 +348,7 @@ def main(canvas):
     global spaceship_breaked
     spaceship_breaked = None
 
-    while len(coroutines) > 0:
+    while coroutines:
         if fire_coordinates:
             row, column = fire_coordinates
             coroutines.append(fire(canvas, start_row=row, start_column=column,
