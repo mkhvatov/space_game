@@ -184,11 +184,9 @@ async def drive_spaceship(canvas, start_row, start_column, animation_frame_1, an
             coroutines.append(fire(canvas, start_row=row, start_column=spaceship_head_column,
                                    rows_speed=ROWS_SPEED, columns_speed=COLUMNS_SPEED))
 
-        global spaceship_breaked
-
         for obstacle in obstacles:
             if obstacle.has_collision(row, column):
-                spaceship_breaked = True
+                coroutines.append(show_gameover(canvas, game_over_frame))
                 return None
 
         await animate_spaceship(animation_frame_1)
@@ -333,13 +331,7 @@ def main(canvas):
     global obstacles_in_last_collisions
     obstacles_in_last_collisions = []
 
-    global spaceship_breaked
-    spaceship_breaked = None
-
     while coroutines:
-        if spaceship_breaked:
-            coroutines.append(show_gameover(canvas, game_over_frame))
-
         try:
             for coroutine in coroutines:
                 coroutine.send(None)
