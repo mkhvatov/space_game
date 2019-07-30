@@ -339,6 +339,7 @@ def main(canvas):
             time.sleep(LOOP_PAUSE)
         except StopIteration:
             coroutines.remove(coroutine)
+            time.sleep(LOOP_PAUSE)
 
 
 if __name__ == '__main__':
