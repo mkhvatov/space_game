@@ -158,7 +158,7 @@ async def save_fire_coordinates(row, column):
 
 async def delete_fire_coordinates():
     global fire_coordinates
-    fire_coordinates = False
+    fire_coordinates = None
 
 
 async def drive_spaceship(canvas, start_row, start_column, animation_frame_1, animation_frame_2):
@@ -240,7 +240,7 @@ async def fly_garbage(canvas, column, garbage_frame, speed=GARBAGE_SPEED):
     try:
         while row < rows_number:
 
-            obstacle_breaked = False
+            obstacle_breaked = None
             for obstacle in obstacles_in_last_collisions:
                 if obstacle.uid == garbage_uid:
                     obstacle_breaked = True
@@ -337,7 +337,7 @@ def main(canvas):
     coroutines.append(garbage_coroutine)
 
     global fire_coordinates
-    fire_coordinates = False
+    fire_coordinates = None
 
     global obstacles
     obstacles = []
@@ -346,7 +346,7 @@ def main(canvas):
     obstacles_in_last_collisions = []
 
     global spaceship_breaked
-    spaceship_breaked = False
+    spaceship_breaked = None
 
     while len(coroutines) > 0:
         if fire_coordinates:
