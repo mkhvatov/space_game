@@ -25,8 +25,8 @@ BLINK_TIME_3 = 5
 BLINK_TIME_4 = 3
 
 # constants for fire function:
-ROW_INDENT = 1
-COLUMN_INDENT = 1
+FIRE_ROW_INDENT = 1
+FIRE_COLUMN_INDENT = 1
 START_ROW = 0
 START_COLUMN = 0
 
@@ -39,8 +39,8 @@ GARBAGE_SPEED = 0.5
 
 # constants for main function:
 MIDDLE_DIVISOR = 2
-ROW_INDENT_2 = 2
-COLUMN_INDENT_2 = 2
+MAIN_ROW_INDENT = 2
+MAIN_COLUMN_INDENT = 2
 ROWS_SPEED = -1
 COLUMNS_SPEED = 0
 MIN_STARS_NUMBER = 35
@@ -108,7 +108,7 @@ async def fire(canvas, start_row, start_column, rows_speed, columns_speed):
     symbol = '-' if columns_speed else '|'
 
     rows, columns = canvas.getmaxyx()
-    max_row, max_column = rows - ROW_INDENT, columns - COLUMN_INDENT
+    max_row, max_column = rows - FIRE_ROW_INDENT, columns - FIRE_COLUMN_INDENT
 
     curses.beep()
 
@@ -315,8 +315,8 @@ def main(canvas):
     max_row, max_column = canvas.getmaxyx()
     start_row, start_column = round(max_row/MIDDLE_DIVISOR), round(max_column/MIDDLE_DIVISOR)
 
-    coordinates = [(random.randint(ROW_INDENT_2, max_row-ROW_INDENT_2),
-                    random.randint(COLUMN_INDENT_2, max_column-COLUMN_INDENT_2)) for i in range(STARS_NUMBER)]
+    coordinates = [(random.randint(MAIN_ROW_INDENT, max_row-MAIN_ROW_INDENT),
+                    random.randint(MAIN_COLUMN_INDENT, max_column-MAIN_COLUMN_INDENT)) for i in range(STARS_NUMBER)]
 
     stars = [blink(canvas, row, column, symbol=random.choice(STAR_SYMBOLS)) for row, column in coordinates]
 
