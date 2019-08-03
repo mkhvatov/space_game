@@ -332,14 +332,13 @@ def main(canvas):
     obstacles_in_last_collisions = []
 
     while coroutines:
-        try:
-            for coroutine in coroutines:
+        for coroutine in coroutines.copy():
+            try:
                 coroutine.send(None)
-            canvas.refresh()
-            time.sleep(LOOP_PAUSE)
-        except StopIteration:
-            coroutines.remove(coroutine)
-            time.sleep(LOOP_PAUSE)
+            except StopIteration:
+                coroutines.remove(coroutine)
+        canvas.refresh()
+        time.sleep(LOOP_PAUSE)
 
 
 if __name__ == '__main__':
