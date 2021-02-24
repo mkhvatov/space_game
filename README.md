@@ -9,7 +9,7 @@
 ## Играть оффлайн
 
 1. Скопируйте репозиторий
-```git clone https://github.com/mkh292/space_game.git```
+```git clone https://github.com/mkhvatov/space_game.git```
 2. Создайте виртуальное окружение:
 ```virtualenv -p python3 venv```
 3. Активируйте виртуальное окружение:
